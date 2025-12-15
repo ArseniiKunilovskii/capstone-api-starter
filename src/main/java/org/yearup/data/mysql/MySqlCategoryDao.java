@@ -1,32 +1,78 @@
 package org.yearup.data.mysql;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.yearup.data.CategoryDao;
 import org.yearup.models.Category;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
 {
+    private DataSource dataSource;
+
+    @Autowired
     public MySqlCategoryDao(DataSource dataSource)
     {
         super(dataSource);
     }
 
     @Override
-    public List<Category> getAllCategories()
+    public List<Category> getAllCategories(String name)
     {
-        // get all categories
-        return null;
+        List<Category> categories = new ArrayList<>();
+
+        String sql = """
+                SELECT * FROM categories
+                WHERE (name = ? or ? ='');""";
+
+        name = name == null ? "" : name;
+
+        try (Connection connection = dataSource.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+
+            preparedStatement.setString(1, name);
+            preparedStatement.setString(2, name);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next()){
+                    Category category = mapRow(resultSet);
+                    categories.add(category);
+                }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return categories;
     }
 
     @Override
     public Category getById(int categoryId)
     {
+        String sql = """
+                SELECT * FROM categories WHERE category_id = ?""";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)){
+
+            preparedStatement.setInt(1, categoryId);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+               if(resultSet.next()){
+                   Category category = mapRow(resultSet);
+                   return category;
+               }
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         // get category by id
         return null;
     }
@@ -34,6 +80,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
     @Override
     public Category create(Category category)
     {
+
         // create a new category
         return null;
     }
@@ -65,5 +112,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
 
         return category;
     }
+
+
 
 }
