@@ -16,8 +16,6 @@ import java.util.List;
 @Component
 public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
 {
-    private DataSource dataSource;
-
     @Autowired
     public MySqlCategoryDao(DataSource dataSource)
     {
@@ -25,22 +23,16 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
     }
 
     @Override
-    public List<Category> getAllCategories(String name)
+    public List<Category> getAllCategories()
     {
         List<Category> categories = new ArrayList<>();
 
         String sql = """
-                SELECT * FROM categories
-                WHERE (name = ? or ? ='');""";
+                SELECT * FROM categories""";
 
-        name = name == null ? "" : name;
 
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(sql)){
-
-            preparedStatement.setString(1, name);
-            preparedStatement.setString(2, name);
-
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next()){
                     Category category = mapRow(resultSet);
@@ -59,7 +51,7 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
     {
         String sql = """
                 SELECT * FROM categories WHERE category_id = ?""";
-        try (Connection connection = dataSource.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)){
 
             preparedStatement.setInt(1, categoryId);

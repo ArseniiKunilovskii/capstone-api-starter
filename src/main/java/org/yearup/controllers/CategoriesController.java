@@ -1,6 +1,10 @@
 package org.yearup.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.yearup.data.CategoryDao;
 import org.yearup.data.ProductDao;
 import org.yearup.models.Category;
@@ -13,6 +17,7 @@ import java.util.List;
     // http://localhost:8080/categories
 // add annotation to allow cross site origin requests
 @RestController
+@RequestMapping("/categories")
 public class CategoriesController
 {
     private CategoryDao categoryDao;
@@ -20,21 +25,32 @@ public class CategoriesController
 
 
     // create an Autowired controller to inject the categoryDao and ProductDao
-
-    // add the appropriate annotation for a get action
-    @RequestMapping(path = "/categories", method = RequestMethod.GET)
-    public List<Category> getAll(@RequestParam(name = "name", required = false) String name)
-    {
-        // find and return all categories
-        return categoryDao.getAllCategories(name);
+    @Autowired
+    public CategoriesController(CategoryDao categoryDao){
+        this.categoryDao = categoryDao;
     }
 
     // add the appropriate annotation for a get action
-    @RequestMapping(path = "/categories/{id}", method = RequestMethod.GET)
+    @GetMapping
+    public List<Category> getAll()
+    {
+        // find and return all categories
+        return categoryDao.getAllCategories();
+    }
+
+    // add the appropriate annotation for a get action
+    @GetMapping("/{id}")
     public Category getById(@PathVariable int id)
     {
         // get the category by id
-        return categoryDao.getById(id);
+        Category category = categoryDao.getById(id);
+
+        // 2. Check if it is null
+        if (category == null) {
+            // 3. Throw a 404 Not Found exception
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
+        }
+        return category;
     }
 
     // the url to return all products in category 1 would look like this
