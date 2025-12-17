@@ -96,7 +96,21 @@ public class ShoppingCartController {
     // add a PUT method to update an existing product in the cart - the url should be
     // https://localhost:8080/cart/products/15 (15 is the productId to be updated)
     // the BODY should be a ShoppingCartItem - quantity is the only value that will be updated
+    @PutMapping("/products/{productId}")
+    @PreAuthorize("isAuthenticated()")
+    public void updateQuantity(@RequestBody ShoppingCartItem item, Principal principal, @PathVariable int productId){
+        String userName = principal.getName();
+        User user = userDao.getByUserName(userName);
+        int userId = user.getId();
 
+        ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
+
+        if(shoppingCart.contains(productId)){
+            int newQuantity = item.getQuantity();
+            shoppingCartDao.updateQuantity(userId,productId,newQuantity);
+        }
+
+    }
 
     // add a DELETE method to clear all products from the current users cart
     // https://localhost:8080/cart
@@ -116,6 +130,4 @@ public class ShoppingCartController {
             e.printStackTrace();
         }
     }
-
-
 }

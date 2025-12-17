@@ -58,6 +58,7 @@ public class MySqlShoppingCardDao extends  MySqlDaoBase implements ShoppingCartD
         return shoppingCart;
     }
 
+    @Override
     public void addItemToCart(int id, ShoppingCartItem item){
         String sql = """
                 INSERT INTO shopping_cart (user_id,product_id,quantity) VALUES (?,?,?)""";
@@ -76,6 +77,7 @@ public class MySqlShoppingCardDao extends  MySqlDaoBase implements ShoppingCartD
         }
     }
 
+    @Override
     public void increaseQuantityByOne(int userId, int productId){
         String sql = """
                 UPDATE shopping_cart SET quantity = quantity + 1 WHERE user_id = ? AND product_id = ?""";
@@ -93,6 +95,7 @@ public class MySqlShoppingCardDao extends  MySqlDaoBase implements ShoppingCartD
         }
     }
 
+    @Override
     public void clearCart(int userId){
         String sql= """
                 DELETE FROM shopping_cart where user_id = ?""";
@@ -106,5 +109,10 @@ public class MySqlShoppingCardDao extends  MySqlDaoBase implements ShoppingCartD
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void updateQuantity(int userId, int productId, int newQuantity) {
+
     }
 }
