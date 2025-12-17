@@ -58,7 +58,7 @@ public class ShoppingCartController {
     @PostMapping("/products/{productId}")
     @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.CREATED)
-    public ShoppingCartItem addItem(@PathVariable int productId, Principal principal) {
+    public ShoppingCart addItem(@PathVariable int productId, Principal principal) {
         ShoppingCartItem item = null;
 
         try {
@@ -71,7 +71,7 @@ public class ShoppingCartController {
             if (shoppingCart.contains(productId)) {
                 shoppingCartDao.increaseQuantityByOne(userId, productId);
                 shoppingCart = shoppingCartDao.getByUserId(userId);
-                return shoppingCart.get(productId);
+                return shoppingCart;
             } else {
 
                 Product product = productDao.getById(productId);
@@ -83,7 +83,7 @@ public class ShoppingCartController {
 
                 shoppingCartDao.addItemToCart(userId, item);
 
-                return item;
+                return shoppingCart;
             }
 
         } catch (Exception e) {
