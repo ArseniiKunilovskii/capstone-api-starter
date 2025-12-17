@@ -3,15 +3,14 @@ package org.yearup.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.yearup.data.ProductDao;
 import org.yearup.data.ShoppingCartDao;
 import org.yearup.data.UserDao;
+import org.yearup.models.Product;
 import org.yearup.models.ShoppingCart;
+import org.yearup.models.ShoppingCartItem;
 import org.yearup.models.User;
 
 import java.security.Principal;
@@ -19,8 +18,7 @@ import java.security.Principal;
 @RestController
 @CrossOrigin
 @RequestMapping("/cart")
-public class ShoppingCartController
-{
+public class ShoppingCartController {
     // a shopping cart requires
     private ShoppingCartDao shoppingCartDao;
     private UserDao userDao;
@@ -37,11 +35,9 @@ public class ShoppingCartController
 
     @GetMapping("")
     @PreAuthorize("isAuthenticated()")
-    public ShoppingCart getCart(Principal principal)
-    {
+    public ShoppingCart getCart(Principal principal) {
         ShoppingCart shoppingCart = null;
-        try
-        {
+        try {
             // get the currently logged in username
             String userName = principal.getName();
             // find database user by userId
@@ -52,15 +48,49 @@ public class ShoppingCartController
             shoppingCart = shoppingCartDao.getByUserId(userId);
 
             return shoppingCart;
-        }
-        catch(Exception e)
-        {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.", e);
         }
     }
 
     // add a POST method to add a product to the cart - the url should be
     // https://localhost:8080/cart/products/15 (15 is the productId to be added
+    @PostMapping("/products/{productId}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ShoppingCartItem addItem(@PathVariable int productId, Principal principal) {
+        ShoppingCartItem item = null;
+
+        try {
+            String userName = principal.getName();
+            User user = userDao.getByUserName(userName);
+            int userId = user.getId();
+
+            ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
+
+            if (shoppingCart.contains(productId)) {
+                shoppingCartDao.increaseQuantityByOne(userId, productId);
+                shoppingCart = shoppingCartDao.getByUserId(userId);
+                return shoppingCart.get(productId);
+            } else {
+
+                Product product = productDao.getById(productId);
+
+
+                item = new ShoppingCartItem();
+                item.setQuantity(1);
+                item.setProduct(product);
+
+                shoppingCartDao.addItemToCart(userId, item);
+
+                return item;
+            }
+
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Oops... our bad.", e);
+        }
+
+    }
 
 
     // add a PUT method to update an existing product in the cart - the url should be
@@ -70,5 +100,22 @@ public class ShoppingCartController
 
     // add a DELETE method to clear all products from the current users cart
     // https://localhost:8080/cart
+    @DeleteMapping
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void clearCart(Principal principal) {
+        try {
+            String userName = principal.getName();
+            User user = userDao.getByUserName(userName);
+            int userId = user.getId();
+
+            shoppingCartDao.clearCart(userId);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
