@@ -83,7 +83,7 @@ public class ShoppingCartController {
 
                 shoppingCartDao.addItemToCart(userId, item);
 
-                return shoppingCart;
+                return shoppingCartDao.getByUserId(userId);
             }
 
         } catch (Exception e) {
